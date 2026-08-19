@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -10,42 +10,31 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Use POST' });
+    return;
   }
 
-  const { apiKey, userKey, endpoint } = req.body;
+  const { apiKey, userKey } = req.body;
 
   if (!apiKey || !userKey) {
-    return res.status(400).json({ error: 'API key and user key required' });
+    res.status(400).json({ error: 'API key and user key required' });
+    return;
   }
 
   try {
-    const crypto = require('crypto');
-    const requestId = crypto.randomUUID ? crypto.randomUUID() : require('uuid').v4();
-
-    const response = await fetch(
-      `https://public-api.etoro.com/api/v1${endpoint}`,
-      {
-        method: 'GET',
-        headers: {
-          'x-api-key': apiKey,
-          'x-user-key': userKey,
-          'x-request-id': requestId,
-          'Accept': 'application/json'
-        }
+    const response = await fetch('https://public-api.etoro.com/api/v1/trading/info/portfolio', {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'x-user-key': userKey,
+        'x-request-id': crypto.randomUUID(),
+        'Accept': 'application/json'
       }
-    );
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: `eToro API error: ${response.status} ${response.statusText}`
-      });
-    }
+    });
 
     const data = await response.json();
-    res.status(200).json(data);
+    res.status(response.status).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
-// test commit
+}// new commit 3
