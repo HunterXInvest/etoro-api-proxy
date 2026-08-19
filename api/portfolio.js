@@ -1,28 +1,18 @@
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
 
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Use POST' });
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Use POST' }); return; }
 
-  const { apiKey, userKey } = req.body;
+  const { apiKey, userKey, endpoint } = req.body;
+  if (!apiKey || !userKey) { res.status(400).json({ error: 'Keys required' }); return; }
 
-  if (!apiKey || !userKey) {
-    res.status(400).json({ error: 'API key and user key required' });
-    return;
-  }
+  const path = endpoint || '/trading/info/real/portfolio';
 
   try {
-    const response = await fetch('https://public-api.etoro.com/api/v1/trading/info/portfolio', {
+    const response = await fetch(`https://public-api.etoro.com/api/v1${path}`, {
       method: 'GET',
       headers: {
         'x-api-key': apiKey,
@@ -31,10 +21,9 @@ export default async function handler(req, res) {
         'Accept': 'application/json'
       }
     });
-
     const data = await response.json();
     res.status(response.status).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}// new commit 3
+}
