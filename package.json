@@ -1,0 +1,9 @@
+{
+  "name": "etoro-api-proxy",
+  "version": "1.0.0",
+  "description": "Proxy backend pour eToro API",
+  "private": true,
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}
